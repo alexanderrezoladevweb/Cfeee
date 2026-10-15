@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COSMIC BITES — Documento de Diseño</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root{
+    --bg-deep:#0b0a1f;
+    --bg-deep2:#140f33;
+    --panel:#1b1540;
+    --panel-light:#241c52;
+    --cyan:#4deeea;
+    --magenta:#ff5fd8;
+    --yellow:#ffd23f;
+    --orange:#ff8a3d;
+    --green:#6bffb0;
+    --purple:#b48aff;
+    --text:#f1eefc;
+    --text-dim:#b9b3dd;
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% 0%, #241c52 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 20%, #2a1850 0%, transparent 50%),
+      var(--bg-deep);
+    color:var(--text);
+    font-family:'Nunito', sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+
+  /* starfield */
+  .stars{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 120px 90px, #fff, transparent),
+      radial-gradient(1px 1px at 60px 160px, #fff, transparent),
+      radial-gradient(2px 2px at 200px 50px, #fff, transparent),
+      radial-gradient(1px 1px at 260px 180px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 320px 100px, #fff, transparent),
+      radial-gradient(1px 1px at 380px 220px, #fff, transparent);
+    background-repeat:repeat;
+    background-size:420px 260px;
+    opacity:.5;
+  }
+
+  h1,h2,h3,h4{
+    font-family:'Baloo 2', sans-serif;
+    margin:0 0 .4em 0;
+    letter-spacing:.3px;
+  }
+
+  a{color:var(--cyan);}
+
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px; position:relative; z-index:1;}
+
+  /* NAV */
+  nav{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter:blur(10px);
+    background:rgba(11,10,31,.78);
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  nav .wrap{display:flex; align-items:center; gap:18px; padding:12px 24px; overflow-x:auto;}
+  nav .logo{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.1rem; color:var(--yellow); white-space:nowrap;}
+  nav .links{display:flex; gap:4px; flex-wrap:nowrap;}
+  nav a{
+    color:var(--text-dim); text-decoration:none; font-weight:700; font-size:.82rem;
+    padding:8px 12px; border-radius:999px; white-space:nowrap; transition:.2s;
+  }
+  nav a:hover{background:rgba(255,255,255,.08); color:var(--cyan);}
+
+  /* HERO */
+  header.hero{
+    position:relative; text-align:center; padding:90px 24px 70px;
+    overflow:hidden;
+  }
+  header.hero .glow{
+    position:absolute; width:600px; height:600px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,95,216,.35), transparent 70%);
+    top:-250px; left:50%; transform:translateX(-50%);
+    filter:blur(10px); z-index:0;
+  }
+  header.hero .tag{
+    position:relative; z-index:1;
+    display:inline-block; background:rgba(77,238,234,.12); border:1px solid rgba(77,238,234,.4);
+    color:var(--cyan); font-weight:700; font-size:.78rem; letter-spacing:1.5px;
+    padding:6px 16px; border-radius:999px; margin-bottom:22px; text-transform:uppercase;
+  }
+  header.hero h1{
+    position:relative; z-index:1;
+    font-size:clamp(2.6rem, 7vw, 4.6rem);
+    font-weight:800;
+    background:linear-gradient(90deg, var(--cyan), var(--magenta) 50%, var(--yellow));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin-bottom:.2em;
+  }
+  header.hero p.sub{
+    position:relative; z-index:1;
+    max-width:620px; margin:0 auto; color:var(--text-dim); font-size:1.08rem; font-weight:600;
+  }
+  header.hero .pills{
+    position:relative; z-index:1;
+    display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:28px;
+  }
+  header.hero .pill{
+    background:var(--panel); border:1px solid rgba(255,255,255,.1);
+    padding:7px 16px; border-radius:999px; font-size:.82rem; font-weight:700; color:var(--text-dim);
+  }
+
+  section{padding:64px 0; position:relative; z-index:1;}
+  section + section{border-top:1px solid rgba(255,255,255,.06);}
+
+  .eyebrow{
+    color:var(--yellow); font-weight:800; font-size:.78rem; letter-spacing:2px; text-transform:uppercase;
+    margin-bottom:6px; display:block;
+  }
+  .section-title{font-size:clamp(1.6rem,3.5vw,2.3rem); margin-bottom:.25em;}
+  .section-intro{color:var(--text-dim); max-width:680px; margin-bottom:36px; font-size:1rem;}
+
+  /* GRID / CARDS generic */
+  .grid{display:grid; gap:18px;}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  @media (max-width:760px){
+    .grid.cols-2, .grid.cols-3{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:linear-gradient(160deg, var(--panel-light), var(--panel));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:var(--radius);
+    padding:22px;
+  }
+  .card h3{font-size:1.05rem; color:var(--text);}
+  .card p{color:var(--text-dim); font-size:.92rem; margin:0;}
+
+  .icon-badge{
+    width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem; margin-bottom:12px;
+  }
+
+  /* MECHANICS */
+  .mech-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  @media (max-width:760px){.mech-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:480px){.mech-grid{grid-template-columns:1fr;}}
+  .mech{
+    background:var(--panel); border-radius:18px; padding:18px; border:1px solid rgba(255,255,255,.07);
+  }
+  .mech span.emoji{font-size:1.4rem;}
+  .mech h4{font-size:.92rem; margin:8px 0 4px;}
+  .mech p{color:var(--text-dim); font-size:.82rem; margin:0;}
+
+  /* PROGRESSION TIMELINE */
+  .timeline{display:flex; flex-direction:column; gap:0;}
+  .tl-item{
+    display:grid; grid-template-columns:110px 28px 1fr; gap:0; align-items:start;
+  }
+  .tl-item .amount{
+    font-family:'Baloo 2',sans-serif; font-weight:800; color:var(--yellow); padding-top:18px; font-size:.95rem;
+  }
+  .tl-line{display:flex; flex-direction:column; align-items:center;}
+  .tl-dot{
+    width:16px; height:16px; border-radius:50%; margin-top:18px;
+    background:var(--magenta); box-shadow:0 0 0 4px rgba(255,95,216,.18);
+  }
+  .tl-bar{flex:1; width:3px; background:linear-gradient(var(--magenta), var(--cyan)); opacity:.4;}
+  .tl-item:last-child .tl-bar{display:none;}
+  .tl-content{
+    background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:16px;
+    padding:16px 20px; margin:8px 0 22px 14px;
+  }
+  .tl-content h4{margin:0 0 4px; font-size:1.05rem; color:var(--cyan);}
+  .tl-content p{margin:0; color:var(--text-dim); font-size:.88rem;}
+
+  /* ALIENS */
+  .alien-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+  @media (max-width:760px){.alien-grid{grid-template-columns:1fr;}}
+  .alien-card{
+    display:flex; gap:16px; background:var(--panel); border:1px solid rgba(255,255,255,.08);
+    border-radius:20px; padding:18px; align-items:flex-start;
+  }
+  .avatar{
+    flex-shrink:0; width:64px; height:64px; border-radius:50% 50% 45% 55%/55% 45% 55% 45%;
+    display:flex; align-items:center; justify-content:center; font-size:1.6rem;
+    border:3px solid rgba(255,255,255,.18);
+  }
+  .alien-card h4{font-size:1rem; margin:0 0 2px;}
+  .alien-card .role{font-size:.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-weight:800; margin-bottom:6px; display:block;}
+  .alien-card p{margin:0; font-size:.88rem; color:var(--text-dim);}
+
+  /* FURNITURE */
+  .furn-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  @media (max-width:760px){.furn-grid{grid-template-columns:1fr;}}
+  .furn-card h3{font-size:.95rem; display:flex; align-items:center; gap:8px;}
+  .furn-card ul{margin:10px 0 0; padding-left:18px; color:var(--text-dim); font-size:.86rem;}
+  .furn-card li{margin-bottom:4px;}
+
+  /* FOOD */
+  .food-cols{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  @media (max-width:760px){.food-cols{grid-template-columns:1fr;}}
+  .food-col{background:var(--panel); border-radius:20px; padding:20px; border:1px solid rgba(255,255,255,.08);}
+  .food-col h3{font-size:1rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+  .food-col ul{list-style:none; margin:0; padding:0;}
+  .food-col li{
+    padding:9px 0; border-bottom:1px dashed rgba(255,255,255,.08); font-size:.9rem; color:var(--text-dim);
+  }
+  .food-col li:last-child{border-bottom:none;}
+  .food-col li b{color:var(--text); font-weight:700;}
+
+  /* FLOW */
+  .flow-list{counter-reset:flow; display:flex; flex-direction:column; gap:14px;}
+  .flow-step{
+    display:grid; grid-template-columns:44px 1fr; gap:16px; align-items:flex-start;
+    background:var(--panel); border-radius:16px; padding:14px 18px; border:1px solid rgba(255,255,255,.07);
+  }
+  .flow-num{
+    counter-increment:flow; width:44px; height:44px; border-radius:12px;
+    background:linear-gradient(135deg, var(--cyan), var(--purple));
+    display:flex; align-items:center; justify-content:center; font-family:'Baloo 2',sans-serif;
+    font-weight:800; color:var(--bg-deep); font-size:1.1rem;
+  }
+  .flow-num::before{content: counter(flow);}
+  .flow-step h4{margin:0 0 2px; font-size:.95rem;}
+  .flow-step p{margin:0; color:var(--text-dim); font-size:.86rem;}
+
+  /* UI SCREENS */
+  .screen-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  @media (max-width:760px){.screen-grid{grid-template-columns:repeat(2,1fr);}}
+  .screen{
+    background:var(--panel); border-radius:16px; padding:16px; border:1px solid rgba(255,255,255,.08); text-align:center;
+  }
+  .screen .ic{font-size:1.5rem; margin-bottom:8px;}
+  .screen h4{font-size:.82rem; margin:0;}
+
+  /* QUOTE / CALLOUT */
+  .callout{
+    background:linear-gradient(135deg, rgba(77,238,234,.1), rgba(255,95,216,.1));
+    border:1px solid rgba(77,238,234,.3);
+    border-radius:var(--radius); padding:24px 28px; margin-top:10px;
+  }
+  .callout p{margin:0; color:var(--text);}
+
+  footer{
+    text-align:center; padding:50px 24px 70px; color:var(--text-dim); font-size:.85rem; position:relative; z-index:1;
+  }
+  footer .logo{font-family:'Baloo 2',sans-serif; color:var(--yellow); font-weight:800; font-size:1rem; margin-bottom:6px;}
+
+  .badge-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+  .badge{
+    font-size:.72rem; font-weight:800; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.5px;
+  }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+
+<nav>
+  <div class="wrap">
+    <span class="logo">✦ Cosmic Bites</span>
+    <div class="links">
+      <a href="#vision">Visión</a>
+      <a href="#mecanicas">Mecánicas</a>
+      <a href="#progresion">Progresión</a>
+      <a href="#alienigenas">Alienígenas</a>
+      <a href="#muebles">Muebles</a>
+      <a href="#platos">Platos</a>
+      <a href="#flujo">Flujo</a>
+      <a href="#interfaz">Interfaz</a>
+      <a href="#monetizacion">Monetización</a>
+      <a href="#extra">Ideas extra</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="glow"></div>
+  <span class="tag">Documento de diseño de juego</span>
+  <h1>COSMIC BITES</h1>
+  <p class="sub">Simulador de gestión de bar-restaurante espacial. Cocina, decora y sirve a alienígenas originales mientras tu pequeño local crece hasta convertirse en un imperio gastronómico galáctico.</p>
+  <div class="pills">
+    <span class="pill">🛸 Management / Tycoon</span>
+    <span class="pill">🎨 Cartoon original</span>
+    <span class="pill">👾 Alienígenas inventados</span>
+    <span class="pill">📱 Mobile-first</span>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- VISION -->
+  <section id="vision">
+    <span class="eyebrow">01 — Concepto</span>
+    <h2 class="section-title">Visión general y atmósfera</h2>
+    <p class="section-intro">
+      El jugador empieza como cocinero/a sin recursos al mando de una vieja cafetera espacial averiada,
+      y poco a poco la convierte en un imperio gastronómico galáctico. Tono cálido, cómico y un poco caótico:
+      piensa en un mercado callejero espacial con la ternura de un juego cozy.
+    </p>
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="icon-badge" style="background:rgba(77,238,234,.15); color:var(--cyan);">🎨</div>
+        <h3>Estilo visual</h3>
+        <p>Dibujos animados originales, planos, colores saturados, contornos gruesos — estética indie cartoon moderna.
+        Nada de razas o personajes de franquicias existentes: todo diseño propio.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge" style="background:rgba(255,95,216,.15); color:var(--magenta);">🎧</div>
+        <h3>Ambientación sonora</h3>
+        <p>Música chill / synth-lounge espacial. Cada cliente tiene micro-animaciones de reacción
+        (antenas vibrando, brillo en los ojos, flotar más rápido) que comunican emoción sin texto.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MECANICAS -->
+  <section id="mecanicas">
+    <span class="eyebrow">02 — Core loop</span>
+    <h2 class="section-title">Mecánicas principales</h2>
+    <p class="section-intro">El bucle de juego combina gestión, cocina rápida y decoración, con progresión constante.</p>
+    <div class="mech-grid">
+      <div class="mech"><span class="emoji">🏗️</span><h4>Gestión de local</h4><p>Comprar, decorar y ampliar espacios.</p></div>
+      <div class="mech"><span class="emoji">🍳</span><h4>Cocina</h4><p>Mini-juegos rápidos: cortar, mezclar, calentar, emplatar.</p></div>
+      <div class="mech"><span class="emoji">📦</span><h4>Inventario</h4><p>Compra de ingredientes, algunos cultivados en invernadero espacial.</p></div>
+      <div class="mech"><span class="emoji">🙋</span><h4>Atención al cliente</h4><p>Tomar pedidos, servir a tiempo, gestionar colas.</p></div>
+      <div class="mech"><span class="emoji">⭐</span><h4>Valoraciones</h4><p>Estrellas por comida + rapidez + ambiente.</p></div>
+      <div class="mech"><span class="emoji">💰</span><h4>Economía</h4><p>Dinero, precios de platos, gastos de ingredientes y personal.</p></div>
+      <div class="mech"><span class="emoji">🏆</span><h4>Reputación</h4><p>Separada del dinero: abre eventos y clientes VIP.</p></div>
+      <div class="mech"><span class="emoji">🤖</span><h4>Personal</h4><p>Camareros robot y cocineros alienígenas contratables.</p></div>
+      <div class="mech"><span class="emoji">📜</span><h4>Menú editable</h4><p>Eliges qué platos ofrecer, con slots ampliables.</p></div>
+      <div class="mech"><span class="emoji">🔧</span><h4>Mejoras de cocina</h4><p>Más fogones, más velocidad, más calidad.</p></div>
+      <div class="mech"><span class="emoji">📖</span><h4>Recetario</h4><p>Coleccionable, se desbloquea por cada alien nuevo servido.</p></div>
+      <div class="mech"><span class="emoji">🎉</span><h4>Eventos</h4><p>Festivales estacionales en clave espacial.</p></div>
+    </div>
+  </section>
+
+  <!-- PROGRESION -->
+  <section id="progresion">
+    <span class="eyebrow">03 — Progresión</span>
+    <h2 class="section-title">Sistema de locales</h2>
+    <p class="section-intro">Cada salto de nivel no es solo cosmético: aumenta mesas, slots de menú, velocidad base de cocina y tipos de clientes que pueden entrar.</p>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="amount">Inicio</div>
+        <div class="tl-line"><div class="tl-dot"></div><div class="tl-bar"></div></div>
+        <div class="tl-content"><h4>La Cafetera Varada</h4><p>Nave chatarra reconvertida · 4 mesas · 1 fogón · estética oxidada pero entrañable.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="amount">$1.000</div>
+        <div class="tl-line"><div class="tl-dot"></div><div class="tl-bar"></div></div>
+        <div class="tl-content"><h4>Nebulosa Bistró</h4><p>Restaurante mediano · 10 mesas · cocina con 3 estaciones · terraza con vistas a un cúmulo estelar.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="amount">$10.000</div>
+        <div class="tl-line"><div class="tl-dot"></div><div class="tl-bar"></div></div>
+        <div class="tl-content"><h4>Estación Gourmet Orión</h4><p>Local grande · barra + salón · zona VIP · 2 cocineros contratables.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="amount">$50.000</div>
+        <div class="tl-line"><div class="tl-dot"></div><div class="tl-bar"></div></div>
+        <div class="tl-content"><h4>Crucero Estelar Deluxe</h4><p>Restaurante móvil en un crucero de lujo · varias plantas · los clientes cambian según el planeta sobrevolado.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="amount">$100.000</div>
+        <div class="tl-line"><div class="tl-dot"></div><div class="tl-bar"></div></div>
+        <div class="tl-content"><h4>Satélite Michelin</h4><p>Sala en gravedad cero (los platos "flotan" hasta el cliente) · máxima exigencia, máximas recompensas.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="amount">$250.000</div>
+        <div class="tl-line"><div class="tl-dot"></div></div>
+        <div class="tl-content"><h4>Franquicia Galáctica <span style="color:var(--yellow);">★ meta final</span></h4><p>Gestionas varios locales a la vez en distintos planetas — modo "imperio".</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALIENS -->
+  <section id="alienigenas">
+    <span class="eyebrow">04 — Reparto</span>
+    <h2 class="section-title">Clientes: alienígenas originales + humanos</h2>
+    <p class="section-intro">Diez especies inventadas con personalidad y gustos propios, más los humanos cotidianos.</p>
+    <div class="alien-grid">
+
+      <div class="alien-card">
+        <div class="avatar" style="background:radial-gradient(circle at 35% 30%, #ffd9f3, #ff8fe0); color:#7a1f66;">◌</div>
+        <div>
+          <span class="role">Dulce / postres</span>
+          <h4>Glorpitos</h4>
+          <p>Gelatina translúcida pastel, ojos enormes, rebotan al caminar. Pagan de más si hay postre.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:linear-gradient(145deg,#9aa6c9,#5b6690); color:#1c2140;">◆</div>
+        <div>
+          <span class="role">Contundente</span>
+          <h4>Krusk</h4>
+          <p>Piel de roca/cristal, lentos y gruñones pero fieles. Odian el picante, aman los guisos.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:radial-gradient(circle, #d9f3ff, #8fd6f0 70%, transparent); opacity:.9; color:#13526b;">≈</div>
+        <div>
+          <span class="role">Ligero / aromático</span>
+          <h4>Vapóridos</h4>
+          <p>Niebla semitransparente que flota. Muy sensibles al olor del local; piden sopas e infusiones.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:radial-gradient(circle at 40% 35%, #ffd199, #ff7a3d); color:#5a1f00;">✦</div>
+        <div>
+          <span class="role">Rapidez</span>
+          <h4>Tentaxos</h4>
+          <p>Pulpo-humanoides de 6 brazos. Piden varios platos a la vez; impacientes con el tiempo de espera.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:linear-gradient(145deg,#ffe56b,#ff9f5a); color:#6b3800;">♪</div>
+        <div>
+          <span class="role">Presentación</span>
+          <h4>Plumavoz</h4>
+          <p>Aves emplumadas, voz melódica y teatrales. Juzgan el emplatado casi más que el sabor.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:radial-gradient(circle at 35% 30%, #b8f5c0, #4caf6e); color:#0c3d1e;">❀</div>
+        <div>
+          <span class="role">Vegetal / zen</span>
+          <h4>Mossari</h4>
+          <p>Cuerpo cubierto de musgo, fotosintéticos. Pacientes; premian mucho la decoración del local.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:linear-gradient(145deg,#8fe8ff,#4a7bff); color:#06204a;">⚡</div>
+        <div>
+          <span class="role">Energía</span>
+          <h4>Chispa-bots</h4>
+          <p>Robots pequeños de circuitos luminosos. "Comen" bebidas energéticas; chisporrotean si algo falla.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:radial-gradient(circle at 35% 30%, #e3c9ff, #9a6bd6); color:#311a52;">❖</div>
+        <div>
+          <span class="role">Raciones grandes</span>
+          <h4>Grumfellos</h4>
+          <p>Gigantes peludos tipo yeti amigable. Piden raciones enormes de comida reconfortante; dan buenas propinas.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:linear-gradient(145deg,#ffd9d9,#ff8080); color:#5a0f0f;">◉</div>
+        <div>
+          <span class="role">Crítico</span>
+          <h4>Ojolargos</h4>
+          <p>Altos, delgados, un ojo en un tallo que todo lo observa. Sus reseñas afectan mucho a la reputación.</p>
+        </div>
+      </div>
+
+      <div class="alien-card">
+        <div class="avatar" style="background:linear-gradient(145deg,#ffe2b8,#ffb366); color:#5a3200;">☺</div>
+        <div>
+          <span class="role">Nostalgia terrícola</span>
+          <h4>Humanos cotidianos</h4>
+          <p>Turistas y trabajadores espaciales normales. Buscan comida "de casa": café, hamburguesas.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MUEBLES -->
+  <section id="muebles">
+    <span class="eyebrow">05 — Decoración</span>
+    <h2 class="section-title">Catálogo de muebles</h2>
+    <p class="section-intro">Los muebles no son solo estética: muchos aumentan la satisfacción de los clientes o la velocidad de servicio.</p>
+    <div class="furn-grid">
+      <div class="card furn-card">
+        <h3>🪑 Mesas y asientos</h3>
+        <ul>
+          <li>Mesa metálica básica</li>
+          <li>Taburete antigravedad flotante</li>
+          <li>Cápsula individual</li>
+          <li>Sofá modular alienígena</li>
+        </ul>
+      </div>
+      <div class="card furn-card">
+        <h3>🍳 Cocina / mostrador</h3>
+        <ul>
+          <li>Mostrador de chatarra reciclada</li>
+          <li>Barra de neón</li>
+          <li>Cocina-portal (teletransporta ingredientes)</li>
+          <li>Freidora de plasma</li>
+        </ul>
+      </div>
+      <div class="card furn-card">
+        <h3>💡 Iluminación</h3>
+        <ul>
+          <li>Lámparas de cristal lunar</li>
+          <li>Neones holográficos</li>
+          <li>Farolillos bioluminiscentes</li>
+        </ul>
+      </div>
+      <div class="card furn-card">
+        <h3>🌿 Plantas y vida decorativa</h3>
+        <ul>
+          <li>Planta carnívora mini</li>
+          <li>Flor cantante</li>
+          <li>Acuario de criaturas espaciales</li>
+        </ul>
+      </div>
+      <div class="card furn-card">
+        <h3>🧱 Paredes y suelos</h3>
+        <ul>
+          <li>Panel de nave reciclado</li>
+          <li>Baldosas estelares</li>
+          <li>Ventanales con vista a nebulosa</li>
+        </ul>
+      </div>
+      <div class="card furn-card">
+        <h3>🛰️ Temática / tecnología</h3>
+        <ul>
+          <li>Banderines de planetas visitados</li>
+          <li>Jukebox espacial</li>
+          <li>Robot camarero</li>
+          <li>Panel de pedidos holográfico</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATOS -->
+  <section id="platos">
+    <span class="eyebrow">06 — Cocina</span>
+    <h2 class="section-title">Recetario</h2>
+    <p class="section-intro">Cada plato se prepara con un mini-juego corto (cortar con ritmo, mezclar hasta el punto correcto, vigilar el fuego), fácil de aprender y con margen de mejora para jugadores expertos.</p>
+    <div class="food-cols">
+      <div class="food-col">
+        <h3>🥤 Básicos</h3>
+        <ul>
+          <li><b>Café cósmico</b></li>
+          <li><b>Batido de cristal lunar</b></li>
+          <li><b>Hamburguesa de proteína sintética</b></li>
+          <li><b>Tostada solar</b></li>
+          <li><b>Ensalada de algas espaciales</b></li>
+          <li><b>Refresco de burbujas de nebulosa</b></li>
+        </ul>
+      </div>
+      <div class="food-col">
+        <h3>🍲 Intermedios</h3>
+        <ul>
+          <li><b>Estofado de criatura Mantícora</b></li>
+          <li><b>Pizza de queso lunar</b></li>
+          <li><b>Pasta con salsa de cometa</b></li>
+          <li><b>Sopa de raíz Mossari</b></li>
+          <li><b>Wok de verduras alienígenas</b></li>
+        </ul>
+      </div>
+      <div class="food-col">
+        <h3>✨ Gourmet / alienígenas</h3>
+        <ul>
+          <li><b>Caviar de estrella fugaz</b></li>
+          <li><b>Filete de Grondor</b></li>
+          <li><b>Flan de energía oscura</b></li>
+          <li><b>Sushi cuántico</b></li>
+          <li><b>Tarta de supernova</b></li>
+          <li><b>Té de niebla Vapórida fermentada</b></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLUJO -->
+  <section id="flujo">
+    <span class="eyebrow">07 — Gameplay</span>
+    <h2 class="section-title">Flujo de una partida típica</h2>
+    <div class="flow-list">
+      <div class="flow-step"><div class="flow-num"></div><div><h4>Revisar inventario</h4><p>Comprar ingredientes que falten.</p></div></div>
+      <div class="flow-step"><div class="flow-num"></div><div><h4>Elegir el menú del día</h4><p>Dentro de los slots disponibles.</p></div></div>
+      <div class="flow-step"><div class="flow-num"></div><div><h4>Abrir el local</h4><p>Empiezan a llegar clientes; colas visibles.</p></div></div>
+      <div class="flow-step"><div class="flow-num"></div><div><h4>Tomar pedido → cocinar → servir</h4><p>Mini-juego de cocina antes de que se agote la paciencia del cliente.</p></div></div>
+      <div class="flow-step"><div class="flow-num"></div><div><h4>Valoración</h4><p>El cliente puntúa con estrellas → dinero + reputación.</p></div></div>
+      <div class="flow-step"><div class="flow-num"></div><div><h4>Cierre del día</h4><p>Resumen de gastos vs ingresos.</p></div></div>
+      <div class="flow-step"><div class="flow-num"></div><div><h4>Invertir ganancias</h4><p>Muebles, mejoras de cocina o personal.</p></div></div>
+      <div class="flow-step"><div class="flow-num"></div><div><h4>Repetir</h4><p>Dificultad y variedad de clientes crecen poco a poco.</p></div></div>
+    </div>
+  </section>
+
+  <!-- INTERFAZ -->
+  <section id="interfaz">
+    <span class="eyebrow">08 — UI</span>
+    <h2 class="section-title">Pantallas principales</h2>
+    <div class="screen-grid">
+      <div class="screen"><div class="ic">🛰️</div><h4>Local (vista isométrica)</h4></div>
+      <div class="screen"><div class="ic">📜</div><h4>Menú / recetario</h4></div>
+      <div class="screen"><div class="ic">🛋️</div><h4>Tienda de decoración</h4></div>
+      <div class="screen"><div class="ic">📦</div><h4>Inventario</h4></div>
+      <div class="screen"><div class="ic">📊</div><h4>Estadísticas</h4></div>
+      <div class="screen"><div class="ic">🗺️</div><h4>Mapa de progresión</h4></div>
+      <div class="screen"><div class="ic">🧑‍🚀</div><h4>Personalización de avatar</h4></div>
+      <div class="screen"><div class="ic">⭐</div><h4>Reseñas de clientes</h4></div>
+    </div>
+  </section>
+
+  <!-- MONETIZACION -->
+  <section id="monetizacion">
+    <span class="eyebrow">09 — Negocio</span>
+    <h2 class="section-title">Monetización</h2>
+    <div class="callout">
+      <p><b>Recomendación:</b> premium de pago único, o freemium ético sin energía/vidas limitadas.
+      Si es free-to-play: cosméticos (skins de local, trajes de personal), pase de temporada con eventos
+      (cometa especial, festival alienígena) y anuncios opcionales para bonus de monedas — nunca pay-to-win
+      en recetas o velocidad.</p>
+    </div>
+    <div class="badge-row">
+      <span class="badge" style="background:rgba(77,238,234,.15); color:var(--cyan);">Pago único</span>
+      <span class="badge" style="background:rgba(255,95,216,.15); color:var(--magenta);">Cosméticos</span>
+      <span class="badge" style="background:rgba(255,210,63,.15); color:var(--yellow);">Pase de temporada</span>
+      <span class="badge" style="background:rgba(107,255,176,.15); color:var(--green);">Sin pay-to-win</span>
+    </div>
+  </section>
+
+  <!-- EXTRA -->
+  <section id="extra">
+    <span class="eyebrow">10 — Retención</span>
+    <h2 class="section-title">Ideas extra para enganchar</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>👤 Clientes recurrentes</h3>
+        <p>Habituales con nombre propio que dan misiones secundarias.</p>
+      </div>
+      <div class="card">
+        <h3>👁️ Rival crítico</h3>
+        <p>Un Ojolargo legendario visita de sorpresa; impresionarlo dispara la reputación.</p>
+      </div>
+      <div class="card">
+        <h3>🎆 Eventos estacionales</h3>
+        <p>Festivales reinterpretados en clave espacial (ej. Festival del Cometa de Invierno).</p>
+      </div>
+      <div class="card">
+        <h3>🤝 Visita a locales de amigos</h3>
+        <p>Modo asíncrono, sin necesidad de multijugador complejo.</p>
+      </div>
+      <div class="card">
+        <h3>📖 Recetario coleccionable</h3>
+        <p>Ilustraciones desbloqueables por cada alienígena nuevo servido.</p>
+      </div>
+      <div class="card">
+        <h3>🏅 Fichas de clientes</h3>
+        <p>Colección de "cartas" con datos curiosos de cada especie atendida.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="logo">✦ COSMIC BITES</div>
+  Documento de diseño de juego · Generado para referencia de desarrollo
+</footer>
+
+</body>
+</html>
